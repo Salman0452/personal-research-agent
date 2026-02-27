@@ -50,6 +50,6 @@ GROQ_API_KEY=your_key_here
 python agent.py
 ```
 
-## 👨Author
+## Author
 Built as part of a 30-day AI Engineer bootcamp.  
 Portfolio: [https://github.com/Salman0452/ai-engineer-portfolio.git]
