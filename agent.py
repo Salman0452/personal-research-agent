@@ -6,6 +6,8 @@ from langchain_classic.tools import Tool
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_classic.prompts import PromptTemplate
 from langchain_classic import hub
+from rag_tool import load_rag_tool
+
 
 load_dotenv()
 
@@ -56,7 +58,18 @@ date_tool = Tool(
     description="Returns today's date. Use this when you need to know the current date."
 )
 
-tools = [search_tool, calculator_tool, date_tool]
+# Tool 4: RAG — Company Documents ← NEW
+rag_search = load_rag_tool()
+rag_tool = Tool(
+    name="company_document_search",
+    func=rag_search,
+    description="""Use this to search internal company HR policies and procedures.
+    Use this when the question is about company rules, employee policies, 
+    relocation, travel expenses, disciplinary action, or any HR topic.
+    Input: a specific question about company policy."""
+)
+
+tools = [search_tool, calculator_tool, date_tool, rag_tool]
 
 # ── 3. AGENT PROMPT ────────────────────────────────────────────────────────────
 # We pull the standard ReAct prompt from LangChain hub
@@ -79,18 +92,17 @@ agent_executor = AgentExecutor(
     handle_parsing_errors=True
 )
 
+
+
 # ── 5. TEST IT ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Test 1 — forces web search tool
-    result = agent_executor.invoke({
-        "input": "What is the latest version of Python and when was it released?"
-    })
-    print("\n🤖 Answer:", result["output"])
-    print("\n" + "="*50 + "\n")
-
-    # Test 2 — forces calculator tool
-    result = agent_executor.invoke({
-        "input": "What is today's date?"
-    })
-    print("\n🤖 Answer:", result["output"])
-
+    tests = [
+        "What is the employee relocation policy?",
+        "What is 2547 multiplied by 13?",
+        "What is the latest news about AI in Europe?"
+    ]
+    for query in tests:
+        print(f"\n{'='*50}")
+        print(f"Query: {query}")
+        result = agent_executor.invoke({"input": query})
+        print(f"🤖 Answer: {result['output']}")
