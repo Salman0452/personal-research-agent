@@ -1,5 +1,5 @@
 ## Live Demo
-[Try it here](https://personal-research-agent-cwsq2mku9sjxqinhxtquew.streamlit.app)
+[Try it here](https://personal-research-agent-dtp6r7xwvxt3hzencn5shf.streamlit.app/)
 
 # Personal Research Agent
 
