@@ -4,6 +4,7 @@ langchain-community
 langchain-chroma
 langchain-cohere
 langchain-groq
+langchain-classic
 langchain==0.2.17
 chromadb
 groq
