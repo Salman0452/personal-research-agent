@@ -6,17 +6,16 @@ from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_classic.tools import Tool
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_classic import hub
-from langchain_classic.memory import ConversationBufferWindowMemory
 from datetime import datetime
 from rag_tool import load_rag_tool
 
 load_dotenv()
 
-st.set_page_config(page_title="AI Research Agent")
+st.set_page_config(page_title="AI Research Agent", page_icon="🤖")
 st.title("Personal Research Agent")
-st.caption("Searches the web, does math, and queries company documents.")
+st.caption("Searches web, does math, queries company documents — and remembers context.")
 
-# ── LOAD AGENT (cached) ────────────────────────────────────────────────────────
+# ── LOAD AGENT ─────────────────────────────────────────────────────────────────
 @st.cache_resource
 def build_agent():
     llm = ChatGroq(
@@ -29,8 +28,7 @@ def build_agent():
     search_tool = Tool(
         name="web_search",
         func=search.run,
-        description="""Use for current, general, or public information from internet.
-        Input: specific search query."""
+        description="Use for current or general information from internet. Input: search query."
     )
 
     def calculator(expression: str) -> str:
@@ -42,7 +40,7 @@ def build_agent():
     calculator_tool = Tool(
         name="calculator",
         func=calculator,
-        description="Use for math calculations. Input: math expression like '15 * 8'."
+        description="Use for math calculations. Input: math expression like '15 * 200'."
     )
 
     def get_current_date(_: str) -> str:
@@ -58,22 +56,18 @@ def build_agent():
     rag_tool = Tool(
         name="company_document_search",
         func=rag_search,
-        description="""Use for company HR policies, employee rules, relocation, 
+        description="""Use for company HR policies, employee rules, relocation,
         travel expenses, disciplinary action. Input: policy question."""
     )
 
     tools = [search_tool, calculator_tool, date_tool, rag_tool]
     prompt = hub.pull("hwchase17/react")
-    agent = create_react_agent(
-        llm=llm,
-        tools=tools,
-        prompt=prompt
-    )
+    agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
 
     return AgentExecutor(
         agent=agent,
         tools=tools,
-        verbose=False,      # False in UI — cleaner experience
+        verbose=False,
         max_iterations=5,
         handle_parsing_errors=True
     )
@@ -81,6 +75,10 @@ def build_agent():
 # ── SESSION STATE ──────────────────────────────────────────────────────────────
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# This stores last 3 turns as plain text — injected into every prompt
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # ── DISPLAY CHAT HISTORY ───────────────────────────────────────────────────────
 for message in st.session_state.messages:
@@ -96,26 +94,49 @@ if prompt := st.chat_input("Ask me anything..."):
     with st.chat_message("assistant"):
         with st.spinner("Agent is thinking..."):
             agent_executor = build_agent()
-            result = agent_executor.invoke({"input": prompt})
+
+            # Build context string from last 3 turns
+            history_text = ""
+            if st.session_state.chat_history:
+                history_text = "\n\nPrevious conversation:\n"
+                # Only keep last 3 turns
+                recent = st.session_state.chat_history[-3:]
+                for turn in recent:
+                    history_text += f"Human: {turn['human']}\nAssistant: {turn['assistant']}\n"
+
+            # Inject history into the current question
+            full_input = f"{prompt}{history_text}"
+
+            result = agent_executor.invoke({"input": full_input})
             answer = result["output"]
 
         st.markdown(answer)
 
+    # Save this turn to history
+    st.session_state.chat_history.append({
+        "human": prompt,
+        "assistant": answer
+    })
     st.session_state.messages.append({
         "role": "assistant",
         "content": answer
     })
 
-
 # ── SIDEBAR ────────────────────────────────────────────────────────────────────
-st.sidebar.title(" Available Tools")
+st.sidebar.title("Available Tools")
 st.sidebar.markdown("""
 - **Web Search** — current information
-- **Calculator** — math expressions  
+- **Calculator** — math expressions
 - **Date** — today's date
 - **Company Docs** — HR policies
 """)
 st.sidebar.markdown("---")
+
+# Clear conversation button
+if st.sidebar.button("Clear Conversation"):
+    st.session_state.messages = []
+    st.session_state.chat_history = []
+    st.rerun()
+
+st.sidebar.markdown("---")
 st.sidebar.caption("Powered by Groq LLaMA 3.3 70B")
-
-
