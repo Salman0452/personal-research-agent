@@ -9,7 +9,11 @@ from langchain_classic import hub
 from datetime import datetime
 from rag_tool import load_rag_tool
 
-load_dotenv()
+def get_secret(key):
+    try:
+        return st.secrets[key]
+    except:
+        return os.getenv(key)
 
 st.set_page_config(page_title="AI Research Agent", page_icon="🤖")
 st.title("Personal Research Agent")
@@ -21,7 +25,7 @@ def build_agent():
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
         temperature=0,
-        groq_api_key=os.getenv("GROQ_API_KEY")
+        groq_api_key=get_secret("GROQ_API_KEY")
     )
 
     search = DuckDuckGoSearchRun()

@@ -1,3 +1,6 @@
+## Live Demo
+[Try it here](https://personal-research-agent-cwsq2mku9sjxqinhxtquew.streamlit.app)
+
 # Personal Research Agent
 
 > An AI agent that thinks, plans, and uses tools autonomously — 
@@ -86,4 +89,4 @@ streamlit run app.py   # UI mode
 
 ## Author
 Built as part of a 30-day AI Engineer bootcamp.  
-Portfolio: [your portfolio repo link]
+Portfolio: [https://github.com/Salman0452/ai-engineer-portfolio.git]
