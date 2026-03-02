@@ -1,11 +1,11 @@
 import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain_classic.agents import AgentExecutor, create_react_agent
-from langchain_classic.tools import Tool
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain.tools import Tool
 from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_classic.prompts import PromptTemplate
-from langchain_classic import hub
+from langchain import hub
+from datetime import datetime
 from rag_tool import load_rag_tool
 
 
